@@ -9,6 +9,8 @@ import SwiftUI
 
 struct HomeView: View {
     
+    
+    @EnvironmentObject private var viewModel : HomeViewModel
     @State private var showPortfolio = false
     
     
@@ -19,6 +21,16 @@ struct HomeView: View {
                 
             VStack {
                 homeHeader
+                columnTitles
+               
+                
+                if !showPortfolio {
+                    allCoinList
+                        .transition(.move(edge: .leading))
+                } else {
+                    portfolioCoinsList
+                        .transition(.move(edge: .trailing))
+                }
                 Spacer(minLength: 0)
             }
         }
@@ -31,10 +43,7 @@ struct HomeView_Previews: PreviewProvider {
             HomeView()
                 .navigationBarHidden(true)
         }
-        .listStyle(.insetGrouped)
-        
-        
-        
+        .environmentObject(dev.homeViewModel)
     }
 }
 
@@ -62,6 +71,44 @@ extension HomeView {
                 }
             
         }
+        .padding(.horizontal)
+    }
+    
+    private var allCoinList : some View {
+        List {
+            ForEach(viewModel.allCoins) { coin in
+                CoinRowView(coin: coin, showHoldingsColumn: false)
+                    .listRowInsets(.init(top: 10, leading: 0, bottom: 0, trailing: 10))
+                
+            }
+        }
+        .listStyle((PlainListStyle()))
+    }
+    
+    private var portfolioCoinsList : some View {
+        List {
+            ForEach(viewModel.allCoins) { coin in
+                CoinRowView(coin: coin, showHoldingsColumn: true)
+                    .listRowInsets(.init(top: 10, leading: 0, bottom: 0, trailing: 10))
+                
+            }
+        }
+        .listStyle((PlainListStyle()))
+    }
+    
+    private var columnTitles: some View {
+        HStack {
+            Text("Coin")
+            Spacer()
+            if showPortfolio {
+                Text("Holdings")
+            }
+            
+            Text("Price")
+                .frame(width: UIScreen.main.bounds.width / 3.5, alignment: .trailing)
+        }
+        .font(.caption)
+        .foregroundColor(Color.theme.secondaryText)
         .padding(.horizontal)
     }
 }
