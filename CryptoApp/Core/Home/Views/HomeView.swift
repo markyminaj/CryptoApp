@@ -11,26 +11,36 @@ struct HomeView: View {
     
     
     @EnvironmentObject private var viewModel : HomeViewModel
-    @State private var showPortfolio = false
+    @State private var showPortfolio = false //animate right
+    @State private var showPortfolioView = false //new sheet
     
     
     var body: some View {
         ZStack {
             Color.theme.background
                 .ignoresSafeArea()
+                .sheet(isPresented: $showPortfolioView) {
+                    PortfolioView()
+                        .environmentObject(viewModel)
+                }
                 
             VStack {
                 homeHeader
+                HomeStatsView(showPortfolio: $showPortfolio)
+                SearchBarView(searchText: $viewModel.searchText)
                 columnTitles
                
                 
                 if !showPortfolio {
                     allCoinList
                         .transition(.move(edge: .leading))
-                } else {
-                    portfolioCoinsList
-                        .transition(.move(edge: .trailing))
                 }
+                if showPortfolio {
+                    portfolioCoinsList
+                        .transition(.move(edge: .trailing)) 
+                }
+                    
+                
                 Spacer(minLength: 0)
             }
         }
@@ -52,6 +62,11 @@ extension HomeView {
         HStack {
             CircleButtonView(iconName: showPortfolio ? "plus" : "info" )
                 .animation(.none)
+                .onTapGesture {
+                    if showPortfolio {
+                        showPortfolioView.toggle()
+                    }
+                }
                 .background(
                     CircleButtonAnimationView(animate: $showPortfolio)
                 )
@@ -87,7 +102,7 @@ extension HomeView {
     
     private var portfolioCoinsList : some View {
         List {
-            ForEach(viewModel.allCoins) { coin in
+            ForEach(viewModel.portfolioCoins) { coin in
                 CoinRowView(coin: coin, showHoldingsColumn: true)
                     .listRowInsets(.init(top: 10, leading: 0, bottom: 0, trailing: 10))
                 
@@ -98,14 +113,58 @@ extension HomeView {
     
     private var columnTitles: some View {
         HStack {
-            Text("Coin")
-            Spacer()
-            if showPortfolio {
-                Text("Holdings")
+            HStack {
+                Text("Coin")
+                Image(systemName: "chevron.down")
+                    .opacity((viewModel.sortOption == .rank || viewModel.sortOption == .rankReversed) ?  1.0 : 0.0)
+                    .rotationEffect(Angle(degrees: viewModel.sortOption == .rank ? 0 : 180))
+            }
+            .onTapGesture {
+                withAnimation(.default) {
+                    viewModel.sortOption = viewModel.sortOption == .rank ? .rankReversed : .rank
+                }
+                
             }
             
-            Text("Price")
-                .frame(width: UIScreen.main.bounds.width / 3.5, alignment: .trailing)
+            Spacer()
+            if showPortfolio {
+                HStack {
+                    Text("Holdings")
+                    Image(systemName: "chevron.down")
+                        .opacity((viewModel.sortOption == .holdings || viewModel.sortOption == .holdingsReversed) ?  1.0 : 0.0)
+                        .rotationEffect(Angle(degrees: viewModel.sortOption == .holdings ? 0 : 180))
+                }
+                .onTapGesture {
+                    withAnimation(.default) {
+                        viewModel.sortOption = viewModel.sortOption == .holdings ? .holdingsReversed : .holdings
+                    }
+                    
+                }
+                
+            }
+            HStack {
+                Text("Price")
+                Image(systemName: "chevron.down")
+                    .opacity((viewModel.sortOption == .price || viewModel.sortOption == .priceReversed) ?  1.0 : 0.0)
+                    .rotationEffect(Angle(degrees: viewModel.sortOption == .price ? 0 : 180))
+            }
+            .frame(width: UIScreen.main.bounds.width / 3.5, alignment: .trailing)
+            .onTapGesture {
+                withAnimation(.default) {
+                    viewModel.sortOption = viewModel.sortOption == .price ? .priceReversed : .price
+                }
+                
+            }
+            
+            Button {
+                withAnimation(.linear(duration: 2.0)) {
+                    viewModel.reloadData()
+                }
+            } label: {
+                Image(systemName: "goforward")
+            }
+            .rotationEffect(Angle(degrees: viewModel.isloading ? 360: 0), anchor: .center)
+
         }
         .font(.caption)
         .foregroundColor(Color.theme.secondaryText)
