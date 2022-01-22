@@ -13,6 +13,8 @@ struct HomeView: View {
     @EnvironmentObject private var viewModel : HomeViewModel
     @State private var showPortfolio = false //animate right
     @State private var showPortfolioView = false //new sheet
+    @State private var selectedCoin: Coin? = nil
+    @State private var showDetailView: Bool = false
     
     
     var body: some View {
@@ -44,6 +46,12 @@ struct HomeView: View {
                 Spacer(minLength: 0)
             }
         }
+        .background (
+            NavigationLink(
+                destination: DetailLoadingView(coin: $selectedCoin),
+                isActive: $showDetailView,
+                label: { EmptyView() })
+        )
     }
 }
 
@@ -93,11 +101,18 @@ extension HomeView {
         List {
             ForEach(viewModel.allCoins) { coin in
                 CoinRowView(coin: coin, showHoldingsColumn: false)
-                    .listRowInsets(.init(top: 10, leading: 0, bottom: 0, trailing: 10))
-                
-            }
+                        .listRowInsets(.init(top: 10, leading: 0, bottom: 0, trailing: 10))
+                        .onTapGesture {
+                            segue(coin: coin)
+                        }
+                }
         }
         .listStyle((PlainListStyle()))
+    }
+    
+    private func segue(coin: Coin) {
+        selectedCoin = coin
+        showDetailView.toggle()
     }
     
     private var portfolioCoinsList : some View {
@@ -105,6 +120,9 @@ extension HomeView {
             ForEach(viewModel.portfolioCoins) { coin in
                 CoinRowView(coin: coin, showHoldingsColumn: true)
                     .listRowInsets(.init(top: 10, leading: 0, bottom: 0, trailing: 10))
+                    .onTapGesture {
+                        segue(coin: coin)
+                    }
                 
             }
         }
