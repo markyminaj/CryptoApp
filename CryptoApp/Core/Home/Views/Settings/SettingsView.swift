@@ -25,7 +25,7 @@ struct SettingsView: View {
                 
                 // content
                 List {
-                    swiftfulThinkingSection
+                    bioSection
                         .listRowBackground(Color.theme.background.opacity(0.5))
                     coinGeckoSection
                         .listRowBackground(Color.theme.background.opacity(0.5))
@@ -58,7 +58,7 @@ struct SettingsView_Previews: PreviewProvider {
 
 extension SettingsView {
     
-    private var swiftfulThinkingSection: some View {
+    private var bioSection: some View {
         Section(header: Text("Swiftful Thinking")) {
             VStack(alignment: .leading) {
                 Image("logo")
